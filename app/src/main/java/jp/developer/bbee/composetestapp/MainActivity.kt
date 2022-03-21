@@ -16,12 +16,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -64,12 +62,24 @@ fun MessageCard(message: Message) {
         Column(modifier = Modifier.clickable(
             indication = null,
             interactionSource = remember { MutableInteractionSource() }
-        ) { isExpanded = !isExpanded }) {
-            Text(
-                text = message.author,
-                color = MaterialTheme.colors.secondaryVariant,
-                style = MaterialTheme.typography.subtitle2
-            )
+        ) {
+            isExpanded = !isExpanded
+        }) {
+            Row {
+                Text(
+                    text = message.author,
+                    color = MaterialTheme.colors.secondaryVariant,
+                    style = MaterialTheme.typography.subtitle2
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                var selectAll by remember { mutableStateOf(false) }
+                Checkbox(
+                    checked = selectAll,
+                    onCheckedChange = { checked ->
+                        selectAll = checked
+                    }
+                )
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Surface(shape = MaterialTheme.shapes.medium,
                 elevation = 1.dp,
@@ -84,10 +94,14 @@ fun MessageCard(message: Message) {
             ) {
                 Text(
                     text = message.body,
-                    modifier = Modifier.animateContentSize(animationSpec = tween(
-                        durationMillis = 200,
-                        easing = LinearOutSlowInEasing
-                    )).padding(all = 4.dp),
+                    modifier = Modifier
+                        .animateContentSize(
+                            animationSpec = tween(
+                                durationMillis = 200,
+                                easing = LinearOutSlowInEasing
+                            )
+                        )
+                        .padding(all = 4.dp),
                     maxLines = if (isExpanded) Int.MAX_VALUE else 1,
                     style = MaterialTheme.typography.body2
                 )
@@ -105,15 +119,37 @@ fun MessageCard(message: Message) {
 @Composable
 fun PreviewMessageCard() {
     ComposeTestAppTheme {
-        Conversation(messages = MessageListData.conversationSample)
+        Column {
+            var clickTimes: Int by remember { mutableStateOf(0) }
+            ClickCounter(
+                clicks = clickTimes,
+                onClick = {
+                    clickTimes++
+                }
+            )
+            Conversation(messages = MessageListData.conversationSample)
+        }
     }
 }
 
 @Composable
 fun Conversation(messages: List<Message>) {
-    LazyColumn{
+    LazyColumn{ // scroll list vertical
         items(messages) { message ->
             MessageCard(message)
+        }
+    }
+}
+
+@Composable
+fun ClickCounter(clicks: Int, onClick: () -> Unit) {
+    Column (
+        modifier = Modifier.padding(5.dp).fillMaxWidth(),
+        verticalArrangement  = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Button(onClick = onClick) {
+            Text("I've been clicked $clicks times")
         }
     }
 }
